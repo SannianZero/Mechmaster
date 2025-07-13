@@ -1,163 +1,246 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:geolocator/geolocator.dart';
+import '../../bloc/services/location_service.dart'; // Asegúrate que esta ruta es correcta
 
-// controllers
-import '../../bloc/controlers/auth_controller.dart';
-import 'menus/hamburguesas_view.dart'; // Asegúrate de que esta ruta sea correcta
-import 'menus/pizzas_view.dart';
-class HomeView extends StatelessWidget {
-  HomeView({super.key});
-  final AuthController authController = Get.put(AuthController());
+class HomeView extends StatefulWidget {
+  const HomeView({super.key});
 
-  final List<Map<String, dynamic>> categories = [
-    {
-      'title': 'Hamburguesas',
-      'icon': Icons.fastfood,
-      'route': () => HamburguesasView(),
-    },
-    {
-  'title': 'Pizzas',
-  'icon': Icons.local_pizza,
-  'route': () => const PizzasView(),
-    },
-    {
-      'title': 'Bebidas',
-      'icon': Icons.local_drink,
-      'route': null,
-    },
-    {
-      'title': 'Postres',
-      'icon': Icons.icecream,
-      'route': null,
-    },
-    {
-      'title': 'Combos',
-      'icon': Icons.lunch_dining,
-      'route': null,
-    },
-    {
-      'title': 'Ofertas',
-      'icon': Icons.local_offer,
-      'route': null,
-    },
-  ];
+  @override
+  State<HomeView> createState() => _HomeViewState();
+}
+
+class _HomeViewState extends State<HomeView> {
+  String destination = '';
+  LatLng? userLocation;
+
+  @override
+  void initState() {
+    super.initState();
+    _getCurrentLocation();
+  }
+
+  Future<void> _getCurrentLocation() async {
+    try {
+      final pos = await LocationService.getCurrentLocation();
+      setState(() {
+        userLocation = LatLng(pos.latitude, pos.longitude);
+      });
+    } catch (e) {
+      Get.snackbar(
+        'Error de ubicación',
+        e.toString(),
+        backgroundColor: Colors.red.shade300,
+        colorText: Colors.white,
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final primaryColor = Colors.red.shade900;
+    final accentColor = Colors.pink.shade400;
+
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.red.shade900, Colors.pink.shade400],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: Column(
-          children: [
-            AppBar(
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              title: const Text(
-                'Bienvenido 🍔',
-                style: TextStyle(color: Colors.white),
-              ),
-              iconTheme: const IconThemeData(color: Colors.white),
-              actions: [
-                IconButton(
-                  onPressed: () {},
-                  icon: const Icon(Icons.notifications_outlined),
-                ),
-              ],
-            ),
-            Expanded(
-              child: GridView.builder(
-                padding: const EdgeInsets.all(16),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                ),
-                itemCount: categories.length,
-                itemBuilder: (context, index) {
-                  final category = categories[index];
-                  return Card(
-                    color: Colors.white.withOpacity(0.15),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 4,
-                    child: InkWell(
-                      onTap: () {
-                        if (category['route'] != null) {
-                          Get.to(category['route']()); // ✅ CORRECTO
-                        }
-                      },
-                      borderRadius: BorderRadius.circular(12),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            category['icon'],
-                            size: 48,
-                            color: Colors.white,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            category['title'],
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
       drawer: Drawer(
-        backgroundColor: Colors.red.shade900,
+        backgroundColor: primaryColor,
         child: ListView(
-          children: [
-            const DrawerHeader(
+          children: const [
+            DrawerHeader(
               child: Text(
-                'Menú Principal',
+                'Mi Cuenta',
                 style: TextStyle(color: Colors.white, fontSize: 24),
               ),
             ),
             ListTile(
-              leading: const Icon(Icons.receipt_long, color: Colors.white),
-              title: const Text('Mis pedidos', style: TextStyle(color: Colors.white)),
-              onTap: () {},
+              leading: Icon(Icons.history, color: Colors.white),
+              title: Text('Historial de viajes', style: TextStyle(color: Colors.white)),
             ),
             ListTile(
-              leading: const Icon(Icons.person, color: Colors.white),
-              title: const Text('Mi cuenta', style: TextStyle(color: Colors.white)),
-              onTap: () {},
+              leading: Icon(Icons.support_agent, color: Colors.white),
+              title: Text('Soporte', style: TextStyle(color: Colors.white)),
             ),
             ListTile(
-              leading: const Icon(Icons.logout, color: Colors.white),
-              title: const Text('Cerrar sesión', style: TextStyle(color: Colors.white)),
-              onTap: () {
-                authController.logout();
-              },
+              leading: Icon(Icons.settings, color: Colors.white),
+              title: Text('Configuraciones', style: TextStyle(color: Colors.white)),
+            ),
+            ListTile(
+              leading: Icon(Icons.logout, color: Colors.white),
+              title: Text('Cerrar sesión', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+      ),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text('¿A dónde vas?', style: TextStyle(color: Colors.white)),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications_outlined),
+            onPressed: () {},
+            color: Colors.white,
+          ),
+        ],
+      ),
+      extendBodyBehindAppBar: true,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [primaryColor, accentColor],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        padding: const EdgeInsets.fromLTRB(16, kToolbarHeight + 32, 16, 16),
+        child: Column(
+          children: [
+            // Ubicación actual
+            _locationBox(
+              icon: Icons.my_location,
+              label: userLocation != null
+                  ? 'Lat: ${userLocation!.latitude.toStringAsFixed(5)}, Lng: ${userLocation!.longitude.toStringAsFixed(5)}'
+                  : 'Ubicación actual no disponible',
+              iconColor: Colors.white,
+            ),
+            const SizedBox(height: 12),
+            // Campo de destino (manual)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.location_on_outlined, color: Colors.white),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextField(
+                      style: const TextStyle(color: Colors.white),
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                        hintText: '¿A dónde vas?',
+                        hintStyle: TextStyle(color: Colors.white70),
+                      ),
+                      onChanged: (value) {
+                        destination = value;
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            // Opciones de vehículo
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _vehicleOption(Icons.directions_car, "Económico"),
+                _vehicleOption(Icons.car_rental, "Premium"),
+                _vehicleOption(Icons.two_wheeler, "Moto"),
+              ],
+            ),
+            const Spacer(),
+            // Buscar conductor (simulado)
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: () {
+                  if (destination.trim().isEmpty) {
+                    Get.snackbar(
+                      'Destino requerido',
+                      'Por favor ingresa un destino.',
+                      backgroundColor: Colors.red.shade300,
+                      colorText: Colors.white,
+                    );
+                    return;
+                  }
+
+                  Get.defaultDialog(
+                    title: "Buscando conductor...",
+                    content: const Padding(
+                      padding: EdgeInsets.all(16),
+                      child: CircularProgressIndicator(),
+                    ),
+                    barrierDismissible: false,
+                  );
+
+                  Future.delayed(const Duration(seconds: 3), () {
+                    Get.back(); // Cierra el diálogo
+                    Get.snackbar(
+                      "¡Conductor encontrado!",
+                      "Tu conductor llegará pronto",
+                      backgroundColor: Colors.green,
+                      colorText: Colors.white,
+                    );
+                  });
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: primaryColor,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text("Buscar conductor", style: TextStyle(fontSize: 18)),
+              ),
             ),
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.pink.shade600,
-        onPressed: () {
-          // Acción para carrito o navegación futura
-        },
-        child: const Icon(Icons.shopping_cart, color: Colors.white),
+        onPressed: _getCurrentLocation,
+        child: const Icon(Icons.gps_fixed, color: Colors.white),
       ),
       backgroundColor: Colors.transparent,
     );
   }
+
+  Widget _locationBox({required IconData icon, required String label, required Color iconColor}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: iconColor),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(color: Colors.white, fontSize: 16),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _vehicleOption(IconData icon, String label) {
+    return Column(
+      children: [
+        CircleAvatar(
+          radius: 28,
+          backgroundColor: Colors.white.withOpacity(0.2),
+          child: Icon(icon, size: 28, color: Colors.white),
+        ),
+        const SizedBox(height: 8),
+        Text(label, style: const TextStyle(color: Colors.white)),
+      ],
+    );
+  }
+}
+
+// Para simular coordenadas (si quieres usar en otras partes)
+class LatLng {
+  final double latitude;
+  final double longitude;
+
+  LatLng(this.latitude, this.longitude);
 }
